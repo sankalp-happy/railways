@@ -1,14 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:ux4g/ux4g.dart';
 import '../widgets/app_drawer.dart';
+import '../services/document_service.dart';
+import '../models/document.dart';
+import '../models/category.dart';
 
-class HomeDashboard extends StatelessWidget {
+class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
+
+  @override
+  State<HomeDashboard> createState() => _HomeDashboardState();
+}
+
+class _HomeDashboardState extends State<HomeDashboard> {
+  final DocumentService _documentService = DocumentService();
+  List<Document> _documents = [];
+  List<Category> _categories = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final dump = await _documentService.getDump();
+    if (!mounted) return;
+    setState(() {
+      _documents = dump['documents'] as List<Document>;
+      _categories = dump['categories'] as List<Category>;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Ux4gScaffold(
-      sidebar: buildAppDrawer(context),
+      sidebar: buildAppDrawer(context, categories: _categories),
       appBar: Ux4gAppBar(
         title: const Text(
           'Home Dashboard',
@@ -33,7 +62,6 @@ class HomeDashboard extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Full-width search bar
           Container(
             padding: const EdgeInsets.all(Ux4gSpacing.md),
             color: Ux4gColors.white,
@@ -49,42 +77,45 @@ class HomeDashboard extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          // Scrollable vertical list
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(Ux4gSpacing.md),
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(bottom: Ux4gSpacing.sm, left: Ux4gSpacing.xs),
-                  child: Text(
-                    'Recently Viewed',
-                    style: TextStyle(
-                      fontSize: Ux4gTypography.sizeH5,
-                      fontWeight: Ux4gTypography.weightSemiBold,
-                    ),
-                  ),
-                ),
-                _buildDocumentCard(
-                    context, 'Standard Span Drawing', 'RDSO/B&S/2023/12', 'v2.1', '2 days ago'),
-                const SizedBox(height: Ux4gSpacing.sm),
-                _buildDocumentCard(
-                    context, 'Track Tolerances Specs', 'RDSO/T/2021/04', 'v1.0', '1 week ago'),
-                const SizedBox(height: Ux4gSpacing.sm),
-                _buildDocumentCard(
-                    context, 'Signaling Relay Manual', 'RDSO/Sig/1999/11', 'Archive', '2 weeks ago'),
-              ],
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _documents.isEmpty
+                    ? const Center(child: Text('No documents found'))
+                    : ListView(
+                        padding: const EdgeInsets.all(Ux4gSpacing.md),
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: Ux4gSpacing.sm, left: Ux4gSpacing.xs),
+                            child: Text(
+                              'All Documents',
+                              style: TextStyle(
+                                fontSize: Ux4gTypography.sizeH5,
+                                fontWeight: Ux4gTypography.weightSemiBold,
+                              ),
+                            ),
+                          ),
+                          ..._documents.map((doc) => Padding(
+                            padding: const EdgeInsets.only(bottom: Ux4gSpacing.sm),
+                            child: _buildDocumentCard(context, doc),
+                          )),
+                        ],
+                      ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDocumentCard(
-      BuildContext context, String name, String number, String version, String date) {
+  Widget _buildDocumentCard(BuildContext context, Document doc) {
+    final timeAgo = _formatTimeAgo(doc.lastUpdated);
     return Ux4gCard(
       onTap: () {
-        Navigator.pushNamed(context, '/pdf', arguments: {'name': name, 'version': version});
+        Navigator.pushNamed(context, '/pdf', arguments: {
+          'name': doc.name,
+          'version': doc.version,
+          'documentId': doc.documentId,
+        });
       },
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +127,7 @@ class HomeDashboard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  doc.name,
                   style: const TextStyle(
                     fontWeight: Ux4gTypography.weightSemiBold,
                     fontSize: Ux4gTypography.sizeBody1,
@@ -104,7 +135,7 @@ class HomeDashboard extends StatelessWidget {
                 ),
                 const SizedBox(height: Ux4gSpacing.xxs),
                 Text(
-                  'Drawing No: $number',
+                  'Drawing No: ${doc.documentId}',
                   style: const TextStyle(
                     color: Ux4gColors.gray600,
                     fontSize: Ux4gTypography.sizeSmall,
@@ -114,12 +145,14 @@ class HomeDashboard extends StatelessWidget {
                 Row(
                   children: [
                     Ux4gBadge(
-                      label: version,
-                      variant: version == 'Archive' ? Ux4gAlertVariant.warning : Ux4gAlertVariant.success,
+                      label: doc.version,
+                      variant: doc.version.toLowerCase() == 'archive'
+                          ? Ux4gAlertVariant.warning
+                          : Ux4gAlertVariant.success,
                     ),
                     const Spacer(),
                     Text(
-                      date,
+                      timeAgo,
                       style: const TextStyle(
                         color: Ux4gColors.gray500,
                         fontSize: Ux4gTypography.sizeSmall,
@@ -133,5 +166,14 @@ class HomeDashboard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatTimeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()} months ago';
+    if (diff.inDays > 0) return '${diff.inDays} days ago';
+    if (diff.inHours > 0) return '${diff.inHours} hours ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes} min ago';
+    return 'just now';
   }
 }

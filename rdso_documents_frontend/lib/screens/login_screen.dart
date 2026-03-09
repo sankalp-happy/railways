@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ux4g/ux4g.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,13 +14,35 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _hrmsIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
-    // In a real app we'd authenticate, here we just navigate to home
-    Navigator.pushReplacementNamed(context, '/home');
+  Future<void> _login() async {
+    final hrmsId = _hrmsIdController.text.trim();
+    final password = _passwordController.text;
+
+    if (hrmsId.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter both HRMS ID and password')),
+      );
+      return;
+    }
+
+    final auth = context.read<AuthService>();
+    final success = await auth.login(hrmsId, password);
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error ?? 'Login failed')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+
     return Ux4gScaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -77,10 +101,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: Ux4gSpacing.xl),
                     Ux4gButton(
-                      onPressed: _login,
+                      onPressed: auth.isLoading ? null : _login,
                       isFullWidth: true,
                       size: Ux4gButtonSize.lg,
-                      child: const Text('Login'),
+                      child: auth.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Ux4gColors.white),
+                            )
+                          : const Text('Login'),
+                    ),
+                    const SizedBox(height: Ux4gSpacing.md),
+                    Center(
+                      child: TextButton(
+                        onPressed: () => Navigator.pushNamed(context, '/register'),
+                        child: const Text('Don\'t have an account? Register'),
+                      ),
                     ),
                   ],
                 ),
