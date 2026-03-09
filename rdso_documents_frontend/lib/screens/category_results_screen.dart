@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:ux4g/ux4g.dart';
 import '../services/document_service.dart';
 import '../models/document.dart';
+import '../utils/pdf_helper.dart';
+import '../config/api_config.dart';
+import '../services/api_service.dart';
 
 class CategoryResultsScreen extends StatefulWidget {
   const CategoryResultsScreen({super.key});
@@ -43,6 +47,38 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
     });
   }
 
+  Future<void> _downloadDoc(Document doc) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Downloading...')),
+    );
+
+    try {
+      final headers = await ApiService().authHeaders();
+      final url = '${ApiConfig.baseUrl}/documents/${doc.documentId}/pdf/?download=true';     
+      final bytes = await fetchPdfBytes(url, headers);
+      if (!mounted) return;
+
+      if (bytes != null && bytes.isNotEmpty) {
+        final path = await savePdfFile(bytes, '${doc.documentId}.pdf');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text(kIsWeb ? 'Download started' : 'Saved to $path')),        
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Download failed')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Download error: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Ux4gScaffold(
@@ -61,8 +97,13 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
                     final doc = _documents[index];
                     final isArchive = doc.version.toLowerCase() == 'archive';
                     return Ux4gCard(
-                      padding: const EdgeInsets.all(Ux4gSpacing.md),
-                      child: Row(
+                      padding: const EdgeInsets.all(Ux4gSpacing.md),                        onTap: () {
+                          Navigator.pushNamed(context, '/pdf', arguments: {
+                            'name': doc.name,
+                            'version': doc.version,
+                            'documentId': doc.documentId,
+                          });
+                        },                      child: Row(
                         children: [
                           Expanded(
                             child: Column(
@@ -109,11 +150,7 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
                               const SizedBox(height: Ux4gSpacing.xs),
                               Ux4gIconButton(
                                 icon: const Icon(Icons.download),
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('PDF download not yet available')),
-                                  );
-                                },
+                                onPressed: () => _downloadDoc(doc),
                                 variant: Ux4gButtonVariant.success,
                                 style: Ux4gButtonStyle.ghost,
                               ),

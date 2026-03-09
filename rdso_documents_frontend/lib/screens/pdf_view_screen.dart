@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:ux4g/ux4g.dart';
+import '../services/auth_service.dart';
 import '../config/api_config.dart';
 import '../services/api_service.dart';
 import '../services/post_service.dart';
@@ -272,7 +274,41 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
     if (_pdfBytes == null) {
       return const Center(child: Text('No PDF data'));
     }
-    return buildPdfViewer(_pdfBytes!);
+
+    final hrmsId = context.read<AuthService>().currentUser?.hrmsId ?? 'Unknown';
+
+    return Stack(
+      children: [
+        buildPdfViewer(_pdfBytes!),
+        IgnorePointer(
+          child: Opacity(
+            opacity: 0.15,
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 2,
+              ),
+              itemBuilder: (context, index) {
+                return Center(
+                  child: Transform.rotate(
+                    angle: -0.5,
+                    child: Text(
+                      'RDSO - $hrmsId',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildFeedbackList() {
