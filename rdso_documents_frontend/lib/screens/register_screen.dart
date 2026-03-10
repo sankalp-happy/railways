@@ -18,6 +18,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void dispose() {
+    _hrmsIdController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
   Future<void> _register() async {
     final hrmsId = _hrmsIdController.text.trim();
     final password = _passwordController.text;

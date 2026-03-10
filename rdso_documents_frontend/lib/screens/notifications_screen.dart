@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ux4g/ux4g.dart';
 import '../services/notification_service.dart';
 import '../models/audit_log.dart';
+import '../utils/date_utils.dart' as app_dates;
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -85,7 +86,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 ),
                                 const SizedBox(height: Ux4gSpacing.xs),
                                 Text(
-                                  _formatTimeAgo(log.createdAt),
+                                  app_dates.formatTimeAgo(log.createdAt),
                                   style: const TextStyle(
                                     color: Ux4gColors.gray500,
                                     fontSize: Ux4gTypography.sizeSmall,
@@ -106,6 +107,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     switch (action) {
       case 'document_create':
         return Icons.new_releases;
+      case 'document_available':
+        return Icons.new_releases;
       case 'document_view':
         return Icons.visibility;
       case 'post_create':
@@ -113,14 +116,5 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       default:
         return Icons.update;
     }
-  }
-
-  String _formatTimeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()} months ago';
-    if (diff.inDays > 0) return '${diff.inDays} days ago';
-    if (diff.inHours > 0) return '${diff.inHours} hours ago';
-    if (diff.inMinutes > 0) return '${diff.inMinutes} min ago';
-    return 'just now';
   }
 }

@@ -23,7 +23,7 @@ class NotificationService {
       // Convert recent documents into pseudo-notifications
       return docs.map((d) => AuditLog(
         id: 0,
-        action: 'document_create',
+        action: 'document_available',
         targetType: 'document',
         targetId: d['document_id'],
         metadata: {'name': d['name'], 'version': d['version']},

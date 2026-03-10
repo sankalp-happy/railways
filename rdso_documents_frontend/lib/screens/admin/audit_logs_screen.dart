@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ux4g/ux4g.dart';
 import '../../models/audit_log.dart';
 import '../../services/admin_service.dart';
+import '../../utils/date_utils.dart' as app_dates;
 
 class AuditLogsScreen extends StatefulWidget {
   const AuditLogsScreen({super.key});
@@ -191,6 +192,6 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> with SingleTickerProv
   }
 
   String _formatDateTime(DateTime dt) {
-    return '${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    return app_dates.formatDate(dt);
   }
 }

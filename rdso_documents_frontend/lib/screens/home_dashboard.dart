@@ -6,6 +6,7 @@ import '../services/document_service.dart';
 import '../services/download_queue_service.dart';
 import '../models/document.dart';
 import '../models/category.dart';
+import '../utils/date_utils.dart' as app_dates;
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -143,7 +144,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
   }
 
   Widget _buildDocumentCard(BuildContext context, Document doc) {
-    final timeAgo = _formatTimeAgo(doc.lastUpdated);
+    final timeAgo = app_dates.formatTimeAgo(doc.lastUpdated);
     return Ux4gCard(
       onTap: () {
         Navigator.pushNamed(context, '/pdf', arguments: {
@@ -201,14 +202,5 @@ class _HomeDashboardState extends State<HomeDashboard> {
         ],
       ),
     );
-  }
-
-  String _formatTimeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()} months ago';
-    if (diff.inDays > 0) return '${diff.inDays} days ago';
-    if (diff.inHours > 0) return '${diff.inHours} hours ago';
-    if (diff.inMinutes > 0) return '${diff.inMinutes} min ago';
-    return 'just now';
   }
 }

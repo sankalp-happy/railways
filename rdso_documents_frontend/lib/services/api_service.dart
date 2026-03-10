@@ -18,7 +18,7 @@ class ApiService {
     return prefs.getString('refresh_token');
   }
 
-  Future<bool> _refreshToken() async {
+  Future<bool> refreshToken() async {
     final refreshToken = await _getRefreshToken();
     if (refreshToken == null) return false;
 
@@ -50,7 +50,7 @@ class ApiService {
     var response = await http.get(uri, headers: await authHeaders());
 
     if (response.statusCode == 401) {
-      final refreshed = await _refreshToken();
+      final refreshed = await refreshToken();
       if (refreshed) {
         response = await http.get(uri, headers: await authHeaders());
       }
@@ -63,7 +63,7 @@ class ApiService {
     var response = await http.post(uri, headers: await authHeaders(), body: jsonEncode(body));
 
     if (response.statusCode == 401) {
-      final refreshed = await _refreshToken();
+      final refreshed = await refreshToken();
       if (refreshed) {
         response = await http.post(uri, headers: await authHeaders(), body: jsonEncode(body));
       }

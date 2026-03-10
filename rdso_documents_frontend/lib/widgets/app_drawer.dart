@@ -48,7 +48,9 @@ Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = co
           ],
         ),
       ),
-      footer: Padding(
+      footer: SafeArea(
+        minimum: const EdgeInsets.only(bottom: 8),
+        child: Padding(
         padding: const EdgeInsets.all(Ux4gSpacing.md),
         child: Ux4gButton(
           onPressed: () async {
@@ -63,6 +65,7 @@ Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = co
           icon: const Icon(Icons.logout),
           child: const Text('Logout'),
         ),
+      ),
       ),
       children: [
         ...categories.map((cat) => Theme(

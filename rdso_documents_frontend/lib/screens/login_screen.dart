@@ -14,6 +14,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _hrmsIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  @override
+  void dispose() {
+    _hrmsIdController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
     final hrmsId = _hrmsIdController.text.trim();
     final password = _passwordController.text;

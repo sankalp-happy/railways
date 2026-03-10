@@ -37,6 +37,8 @@ class AuditLog {
         return 'User Status Change';
       case 'document_create':
         return 'New Document Added';
+      case 'document_available':
+        return 'Document Available';
       case 'document_view':
         return 'Document Viewed';
       case 'post_create':

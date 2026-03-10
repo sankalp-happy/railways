@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../services/post_service.dart';
 import '../models/post.dart';
 import '../utils/pdf_helper.dart';
+import '../utils/date_utils.dart' as app_dates;
 
 class PdfViewScreen extends StatefulWidget {
   const PdfViewScreen({super.key});
@@ -405,6 +406,6 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
   }
 
   String _formatDate(DateTime dt) {
-    return '${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    return app_dates.formatDate(dt);
   }
 }

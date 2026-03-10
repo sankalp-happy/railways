@@ -21,6 +21,7 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
   List<Document> _documents = [];
   bool _isLoading = true;
   String _title = 'Results';
+  String? _loadedTitle;
 
   // Multi-select state
   bool _selectMode = false;
@@ -30,7 +31,10 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _title = ModalRoute.of(context)?.settings.arguments as String? ?? 'Results';
-    _loadDocuments();
+    if (_loadedTitle != _title) {
+      _loadedTitle = _title;
+      _loadDocuments();
+    }
   }
 
   Future<void> _loadDocuments() async {

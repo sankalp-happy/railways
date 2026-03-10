@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import '../models/user.dart';
+import 'api_service.dart';
 
 class AuthService extends ChangeNotifier {
   User? _currentUser;
@@ -58,7 +59,7 @@ class AuthService extends ChangeNotifier {
 
       // If profile fetch failed (expired token), try refreshing
       if (_currentUser == null && refreshToken != null) {
-        final refreshed = await _refreshAccessToken();
+        final refreshed = await ApiService().refreshToken();
         if (refreshed) {
           await fetchProfile();
         }
@@ -67,35 +68,6 @@ class AuthService extends ChangeNotifier {
 
     _isInitialized = true;
     notifyListeners();
-  }
-
-  /// Refresh the access token using the stored refresh token.
-  /// Returns true if successful.
-  Future<bool> _refreshAccessToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final refreshToken = prefs.getString('refresh_token');
-    if (refreshToken == null) return false;
-
-    try {
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/refresh/'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refresh': refreshToken}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        await prefs.setString('access_token', data['access']);
-        return true;
-      } else {
-        // Refresh token is invalid/expired — clear tokens
-        await prefs.remove('access_token');
-        await prefs.remove('refresh_token');
-        return false;
-      }
-    } catch (_) {
-      return false;
-    }
   }
 
   Future<bool> login(String hrmsId, String password) async {

@@ -23,6 +23,17 @@ class _CreateDocumentScreenState extends State<CreateDocumentScreen> {
   List<Category> _availableCategories = [];
 
   @override
+  void dispose() {
+    _documentIdController.dispose();
+    _nameController.dispose();
+    _versionController.dispose();
+    _linkController.dispose();
+    _internalLinkController.dispose();
+    _categoryController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final arg = ModalRoute.of(context)?.settings.arguments;
@@ -127,7 +138,7 @@ class _CreateDocumentScreenState extends State<CreateDocumentScreen> {
               Ux4gTextField(
                 controller: _internalLinkController,
                 label: 'Internal Link *',
-                hint: 'http://127.0.0.1:8000/api/documents/.../pdf/',
+                hint: 'Internal storage path or API URL',
                 prefixIcon: const Icon(Icons.link),
               ),
               const SizedBox(height: Ux4gSpacing.lg),
