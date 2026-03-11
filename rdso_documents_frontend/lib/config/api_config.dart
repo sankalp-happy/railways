@@ -1,6 +1,7 @@
 class ApiConfig {
+  // TODO: Switch defaultValue to HTTPS once the server has a TLS certificate.
   static const baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://52.140.125.36:7146/api',
+    defaultValue: 'http://52.140.125.36:7146/api',
   );
 }
