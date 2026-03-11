@@ -55,6 +55,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             padding: const EdgeInsets.only(right: Ux4gSpacing.sm),
             child: IconButton(
               icon: const Icon(Icons.notifications),
+              tooltip: 'Notifications',
               color: Ux4gColors.primary,
               onPressed: () {
                 Navigator.pushNamed(context, '/notifications');
@@ -145,15 +146,18 @@ class _HomeDashboardState extends State<HomeDashboard> {
 
   Widget _buildDocumentCard(BuildContext context, Document doc) {
     final timeAgo = app_dates.formatTimeAgo(doc.lastUpdated);
-    return Ux4gCard(
-      onTap: () {
-        Navigator.pushNamed(context, '/pdf', arguments: {
-          'name': doc.name,
-          'version': doc.version,
-          'documentId': doc.documentId,
-        });
-      },
-      child: Row(
+    return Semantics(
+      button: true,
+      label: 'Open ${doc.name}, Drawing No: ${doc.documentId}, Version: ${doc.version}',
+      child: Ux4gCard(
+        onTap: () {
+          Navigator.pushNamed(context, '/pdf', arguments: {
+            'name': doc.name,
+            'version': doc.version,
+            'documentId': doc.documentId,
+          });
+        },
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(Icons.picture_as_pdf, color: Ux4gColors.danger, size: 40),
@@ -200,6 +204,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

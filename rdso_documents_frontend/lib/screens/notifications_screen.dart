@@ -50,52 +50,57 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     final isNew = index < 3;
                     final docName = log.metadata['name'] ?? log.targetId;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: Ux4gSpacing.sm),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: isNew
-                                ? Ux4gColors.primary.withValues(alpha: 0.1)
-                                : Ux4gColors.gray100,
-                            child: Icon(
-                              _iconForAction(log.action),
-                              color: isNew ? Ux4gColors.primary : Ux4gColors.gray600,
-                            ),
-                          ),
-                          const SizedBox(width: Ux4gSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                RichText(
-                                  text: TextSpan(
-                                    style: const TextStyle(
-                                      color: Ux4gColors.black,
-                                      fontSize: Ux4gTypography.sizeBody1,
-                                    ),
-                                    children: [
-                                      TextSpan(
-                                        text: '${log.actionLabel} ',
-                                        style: const TextStyle(fontWeight: Ux4gTypography.weightBold),
+                    return Semantics(
+                      label: '${log.actionLabel} for $docName, ${app_dates.formatTimeAgo(log.createdAt)}',
+                      child: ExcludeSemantics(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: Ux4gSpacing.sm),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: isNew
+                                    ? Ux4gColors.primary.withValues(alpha: 0.1)
+                                    : Ux4gColors.gray100,
+                                child: Icon(
+                                  _iconForAction(log.action),
+                                  color: isNew ? Ux4gColors.primary : Ux4gColors.gray600,
+                                ),
+                              ),
+                              const SizedBox(width: Ux4gSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(
+                                          color: Ux4gColors.black,
+                                          fontSize: Ux4gTypography.sizeBody1,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: '${log.actionLabel} ',
+                                            style: const TextStyle(fontWeight: Ux4gTypography.weightBold),
+                                          ),
+                                          TextSpan(text: 'for "$docName"'),
+                                        ],
                                       ),
-                                      TextSpan(text: 'for "$docName"'),
-                                    ],
-                                  ),
+                                    ),
+                                    const SizedBox(height: Ux4gSpacing.xs),
+                                    Text(
+                                      app_dates.formatTimeAgo(log.createdAt),
+                                      style: const TextStyle(
+                                        color: Ux4gColors.gray500,
+                                        fontSize: Ux4gTypography.sizeSmall,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: Ux4gSpacing.xs),
-                                Text(
-                                  app_dates.formatTimeAgo(log.createdAt),
-                                  style: const TextStyle(
-                                    color: Ux4gColors.gray500,
-                                    fontSize: Ux4gTypography.sizeSmall,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     );
                   },

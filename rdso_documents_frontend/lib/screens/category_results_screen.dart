@@ -253,6 +253,7 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
                                 Ux4gIconButton(
                                   icon:
                                       const Icon(Icons.visibility),
+                                  tooltip: 'View ${doc.name}',
                                   onPressed: () {
                                     Navigator.pushNamed(
                                         context, '/pdf',
@@ -272,6 +273,7 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
                                 Ux4gIconButton(
                                   icon:
                                       const Icon(Icons.download),
+                                  tooltip: 'Download ${doc.name}',
                                   onPressed: () =>
                                       _downloadDoc(doc),
                                   variant:
