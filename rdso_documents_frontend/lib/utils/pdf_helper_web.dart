@@ -1,23 +1,33 @@
-import 'dart:typed_data';
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:ui_web' as ui_web;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:http/http.dart' as http;
 
 int _viewCounter = 0;
 
 Future<Uint8List?> fetchPdfBytes(
     String url, Map<String, String> headers) async {
-  final request = await html.HttpRequest.request(
-    url,
-    method: 'GET',
-    requestHeaders: headers,
-    responseType: 'arraybuffer',
-  );
-  if (request.status == 200) {
-    final buffer = request.response as ByteBuffer;
-    return buffer.asUint8List();
+  const maxAttempts = 2;
+  for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) return response.bodyBytes;
+      if (kDebugMode) {
+        debugPrint('[fetchPdfBytes] HTTP ${response.statusCode} on attempt $attempt');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[fetchPdfBytes] attempt $attempt failed: $e');
+      }
+      if (attempt < maxAttempts) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        continue;
+      }
+      rethrow;
+    }
   }
   return null;
 }

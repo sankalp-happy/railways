@@ -68,23 +68,15 @@ Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = co
       ),
       ),
       children: [
-        ...categories.map((cat) => Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            leading: Icon(_iconForCategory(cat.name), color: Ux4gColors.gray600),
-            title: Text(cat.name,
-                style: const TextStyle(fontSize: Ux4gTypography.sizeBody1)),
-            childrenPadding: const EdgeInsets.only(left: Ux4gSpacing.xl),
-            children: [
-              Ux4gSidebarItem(
-                title: 'All',
-                icon: const Icon(Icons.file_copy),
-                onTap: () {
-                  Navigator.pushNamed(context, '/results', arguments: cat.name);
-                },
-              ),
-            ],
-          ),
+        ...categories.map((cat) => Ux4gSidebarItem(
+          title: '${cat.name} (${cat.drawingCount ?? 0})',
+          icon: Icon(_iconForCategory(cat.name)),
+          onTap: () {
+            Navigator.pushNamed(context, '/subheads', arguments: {
+              'categoryId': cat.id,
+              'categoryName': cat.name,
+            });
+          },
         )),
         Ux4gSidebarItem(
           title: 'All Documents',
@@ -116,6 +108,11 @@ Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = co
             title: 'Create Document',
             icon: const Icon(Icons.note_add),
             onTap: () => Navigator.pushNamed(context, '/admin/create-document', arguments: categories),
+          ),
+          Ux4gSidebarItem(
+            title: 'RDSO Crawler',
+            icon: const Icon(Icons.sync),
+            onTap: () => Navigator.pushNamed(context, '/admin/crawler'),
           ),
           Ux4gSidebarItem(
             title: 'Audit Logs',

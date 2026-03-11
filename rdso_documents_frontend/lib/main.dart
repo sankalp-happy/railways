@@ -8,11 +8,14 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_dashboard.dart';
 import 'screens/category_results_screen.dart';
+import 'screens/subhead_list_screen.dart';
+import 'screens/drawing_list_screen.dart';
 import 'screens/pdf_view_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/admin/user_management_screen.dart';
 import 'screens/admin/create_document_screen.dart';
 import 'screens/admin/audit_logs_screen.dart';
+import 'screens/admin/crawler_screen.dart';
 import 'widgets/admin_guard.dart';
 
 void main() {
@@ -51,10 +54,13 @@ class RdsoDocumentsApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeDashboard(),
         '/results': (context) => const CategoryResultsScreen(),
+        '/subheads': (context) => const SubheadListScreen(),
+        '/drawings': (context) => const DrawingListScreen(),
         '/pdf': (context) => const PdfViewScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/admin/users': (context) => const AdminGuard(child: UserManagementScreen()),
         '/admin/create-document': (context) => const AdminGuard(child: CreateDocumentScreen()),
+        '/admin/crawler': (context) => const AdminGuard(child: CrawlerScreen()),
         '/admin/logs': (context) => const AdminGuard(child: AuditLogsScreen()),
       },
     );

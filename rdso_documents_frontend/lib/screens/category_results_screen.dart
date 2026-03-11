@@ -192,6 +192,7 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
                                     'name': doc.name,
                                     'version': doc.version,
                                     'documentId': doc.documentId,
+                                    'contentType': doc.contentType,
                                   });
                             },
                       child: Row(
@@ -262,6 +263,8 @@ class _CategoryResultsScreenState extends State<CategoryResultsScreen> {
                                           'version': doc.version,
                                           'documentId':
                                               doc.documentId,
+                                          'contentType':
+                                              doc.contentType,
                                         });
                                   },
                                   variant:

@@ -24,26 +24,31 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
   String? _documentId;
   String _name = 'Document';
   String _version = 'Current';
+  String _contentType = 'application/pdf';
   bool _showFeedback = false;
   String? _pdfUrl;
   bool _pdfError = false;
   Uint8List? _pdfBytes;
   bool _isLoadingPdf = false;
   String? _pdfErrorMessage;
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_initialized) return;
     final arg = ModalRoute.of(context)?.settings.arguments;
     if (arg is Map) {
       _name = arg['name'] ?? _name;
       _version = arg['version'] ?? _version;
       _documentId = arg['documentId'];
+      _contentType = arg['contentType'] ?? 'application/pdf';
     }
     if (_documentId != null) {
+      _initialized = true;
       _pdfUrl = '${ApiConfig.baseUrl}/documents/?document_ids=$_documentId&download=false';
-      if (_pdfBytes == null && !_isLoadingPdf) _loadPdf();
-      if (_feedback.isEmpty) _loadFeedback();
+      _loadPdf();
+      _loadFeedback();
     }
   }
 
@@ -62,18 +67,22 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
       if (!mounted) return;
       if (kDebugMode) debugPrint('[PdfViewScreen] _loadPdf: received ${bytes?.length ?? 0} bytes');
       if (bytes != null && bytes.length > 4) {
-        // Validate PDF magic number (%PDF)
-        final magic = String.fromCharCodes(bytes.sublist(0, 5));
-        if (kDebugMode) debugPrint('[PdfViewScreen] _loadPdf: magic=$magic');
-        if (bytes[0] == 0x25 && bytes[1] == 0x50 && bytes[2] == 0x44 && bytes[3] == 0x46) {
+        // Check if this is a PDF by magic number, or an image by content type
+        final isPdf = bytes[0] == 0x25 && bytes[1] == 0x50 && bytes[2] == 0x44 && bytes[3] == 0x46;
+        final isImage = _contentType.startsWith('image/');
+        if (kDebugMode) debugPrint('[PdfViewScreen] _loadPdf: isPdf=$isPdf, isImage=$isImage, contentType=$_contentType');
+
+        if (isPdf || isImage) {
           setState(() {
             _pdfBytes = bytes;
             _isLoadingPdf = false;
           });
         } else {
-          // Server returned non-PDF (likely JSON error)
-          final text = String.fromCharCodes(bytes);
-          if (kDebugMode) debugPrint('[PdfViewScreen] non-PDF response: $text');
+          // Server returned unexpected content
+          if (kDebugMode) {
+            final text = String.fromCharCodes(bytes.take(200));
+            debugPrint('[PdfViewScreen] unexpected response: $text');
+          }
           setState(() {
             _pdfError = true;
             _pdfErrorMessage = 'Unable to load document. Please try again later.';
@@ -175,7 +184,8 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
       if (!mounted) return;
 
       if (bytes != null && bytes.isNotEmpty) {
-        final fileName = '$_documentId.pdf';
+        final ext = _extensionForContentType(_contentType);
+        final fileName = '$_documentId$ext';
         final path = await savePdfFile(bytes, fileName);
         if (!mounted) return;
         ScaffoldMessenger.of(context).clearSnackBars();
@@ -226,12 +236,12 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
 
         if (kIsWeb) {
           // On web, just trigger a download
-          await savePdfFile(bytes, '$_documentId.pdf');
+          await savePdfFile(bytes, '$_documentId${_extensionForContentType(_contentType)}');
           return;
         }
 
         // Save to temp dir for sharing
-        final fileName = '$_documentId.pdf';
+        final fileName = '$_documentId${_extensionForContentType(_contentType)}';
         final tempPath = await savePdfToTemp(bytes, fileName);
 
         await Share.shareXFiles(
@@ -356,7 +366,18 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
       );
     }
     if (_pdfBytes == null) {
-      return const Center(child: Text('No PDF data'));
+      return const Center(child: Text('No document data'));
+    }
+
+    // Render image files directly
+    if (_contentType.startsWith('image/')) {
+      return InteractiveViewer(
+        minScale: 0.5,
+        maxScale: 4.0,
+        child: Center(
+          child: Image.memory(_pdfBytes!, fit: BoxFit.contain),
+        ),
+      );
     }
 
     return buildPdfViewer(_pdfBytes!);
@@ -411,5 +432,20 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
 
   String _formatDate(DateTime dt) {
     return app_dates.formatDate(dt);
+  }
+
+  String _extensionForContentType(String ct) {
+    switch (ct) {
+      case 'image/jpeg':
+        return '.jpg';
+      case 'image/png':
+        return '.png';
+      case 'image/gif':
+        return '.gif';
+      case 'image/webp':
+        return '.webp';
+      default:
+        return '.pdf';
+    }
   }
 }

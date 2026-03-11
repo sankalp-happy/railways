@@ -1,13 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/user.dart';
 import 'api_service.dart';
 
 class AuthService extends ChangeNotifier {
-  final _storage = const FlutterSecureStorage();
   User? _currentUser;
   bool _isLoading = false;
   bool _isInitialized = false;
@@ -50,16 +48,17 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> init() async {
-    final accessToken = await _storage.read(key: 'access_token');
-    final refreshToken = await _storage.read(key: 'refresh_token');
+    // Warm up the ApiService token cache from persistent storage
+    final api = ApiService();
+    final headers = await api.authHeaders();
 
-    if (accessToken != null) {
+    if (headers.containsKey('Authorization')) {
       // Try fetching profile with existing access token
       await fetchProfile();
 
       // If profile fetch failed (expired token), try refreshing
-      if (_currentUser == null && refreshToken != null) {
-        final refreshed = await ApiService().refreshToken();
+      if (_currentUser == null) {
+        final refreshed = await api.refreshToken();
         if (refreshed) {
           await fetchProfile();
         }
@@ -84,8 +83,7 @@ class AuthService extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        await _storage.write(key: 'access_token', value: data['access']);
-        await _storage.write(key: 'refresh_token', value: data['refresh']);
+        await ApiService().setTokens(access: data['access'], refresh: data['refresh']);
         await fetchProfile();
         _isLoading = false;
         notifyListeners();
@@ -106,16 +104,13 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> fetchProfile() async {
-    final token = await _storage.read(key: 'access_token');
-    if (token == null) return;
+    final headers = await ApiService().authHeaders();
+    if (headers['Authorization'] == null) return;
 
     try {
       final response = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/hello/'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -130,8 +125,7 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _storage.delete(key: 'access_token');
-    await _storage.delete(key: 'refresh_token');
+    await ApiService().clearTokens();
     _currentUser = null;
     notifyListeners();
   }

@@ -10,12 +10,30 @@ class ApiService {
 
   final _storage = const FlutterSecureStorage();
 
+  // In-memory token cache to avoid repeated secure-storage reads
+  String? _cachedAccessToken;
+  String? _cachedRefreshToken;
+
   Future<String?> _getAccessToken() async {
-    return await _storage.read(key: 'access_token');
+    return _cachedAccessToken ??= await _storage.read(key: 'access_token');
   }
 
   Future<String?> _getRefreshToken() async {
-    return await _storage.read(key: 'refresh_token');
+    return _cachedRefreshToken ??= await _storage.read(key: 'refresh_token');
+  }
+
+  Future<void> setTokens({required String access, required String refresh}) async {
+    _cachedAccessToken = access;
+    _cachedRefreshToken = refresh;
+    await _storage.write(key: 'access_token', value: access);
+    await _storage.write(key: 'refresh_token', value: refresh);
+  }
+
+  Future<void> clearTokens() async {
+    _cachedAccessToken = null;
+    _cachedRefreshToken = null;
+    await _storage.delete(key: 'access_token');
+    await _storage.delete(key: 'refresh_token');
   }
 
   Future<bool> refreshToken() async {
@@ -30,6 +48,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      _cachedAccessToken = data['access'];
       await _storage.write(key: 'access_token', value: data['access']);
       return true;
     }

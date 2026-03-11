@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ux4g/ux4g.dart';
 import '../widgets/app_drawer.dart';
-import '../services/document_service.dart';
+import '../services/catalog_service.dart';
 import '../services/download_queue_service.dart';
-import '../models/document.dart';
 import '../models/category.dart';
-import '../utils/date_utils.dart' as app_dates;
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -16,8 +14,7 @@ class HomeDashboard extends StatefulWidget {
 }
 
 class _HomeDashboardState extends State<HomeDashboard> {
-  final DocumentService _documentService = DocumentService();
-  List<Document> _documents = [];
+  final CatalogService _catalogService = CatalogService();
   List<Category> _categories = [];
   bool _isLoading = true;
 
@@ -28,11 +25,10 @@ class _HomeDashboardState extends State<HomeDashboard> {
   }
 
   Future<void> _loadData() async {
-    final dump = await _documentService.getDump();
+    final categories = await _catalogService.getCategories();
     if (!mounted) return;
     setState(() {
-      _documents = dump['documents'] as List<Document>;
-      _categories = dump['categories'] as List<Category>;
+      _categories = categories;
       _isLoading = false;
     });
   }
@@ -43,7 +39,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
       sidebar: buildAppDrawer(context, categories: _categories),
       appBar: Ux4gAppBar(
         title: const Text(
-          'Home Dashboard',
+          'RDSO Drawing Catalog',
           style: TextStyle(
             fontSize: Ux4gTypography.sizeH4,
             fontWeight: Ux4gTypography.weightBold,
@@ -117,26 +113,23 @@ class _HomeDashboardState extends State<HomeDashboard> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _documents.isEmpty
-                    ? const Center(child: Text('No documents found'))
-                    : ListView(
-                        padding: const EdgeInsets.all(Ux4gSpacing.md),
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: Ux4gSpacing.sm, left: Ux4gSpacing.xs),
-                            child: Text(
-                              'All Documents',
-                              style: TextStyle(
-                                fontSize: Ux4gTypography.sizeH5,
-                                fontWeight: Ux4gTypography.weightSemiBold,
-                              ),
-                            ),
+                : _categories.isEmpty
+                    ? const Center(child: Text('No categories found'))
+                    : RefreshIndicator(
+                        onRefresh: _loadData,
+                        child: GridView.builder(
+                          padding: const EdgeInsets.all(Ux4gSpacing.md),
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 280,
+                            childAspectRatio: 1.3,
+                            crossAxisSpacing: Ux4gSpacing.md,
+                            mainAxisSpacing: Ux4gSpacing.md,
                           ),
-                          ..._documents.map((doc) => Padding(
-                            padding: const EdgeInsets.only(bottom: Ux4gSpacing.sm),
-                            child: _buildDocumentCard(context, doc),
-                          )),
-                        ],
+                          itemCount: _categories.length,
+                          itemBuilder: (context, index) {
+                            return _buildCategoryCard(context, _categories[index]);
+                          },
+                        ),
                       ),
           ),
         ],
@@ -144,68 +137,62 @@ class _HomeDashboardState extends State<HomeDashboard> {
     );
   }
 
-  Widget _buildDocumentCard(BuildContext context, Document doc) {
-    final timeAgo = app_dates.formatTimeAgo(doc.lastUpdated);
-    return Semantics(
-      button: true,
-      label: 'Open ${doc.name}, Drawing No: ${doc.documentId}, Version: ${doc.version}',
-      child: Ux4gCard(
-        onTap: () {
-          Navigator.pushNamed(context, '/pdf', arguments: {
-            'name': doc.name,
-            'version': doc.version,
-            'documentId': doc.documentId,
-          });
-        },
-        child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCategoryCard(BuildContext context, Category cat) {
+    return Ux4gCard(
+      onTap: () {
+        Navigator.pushNamed(context, '/subheads', arguments: {
+          'categoryId': cat.id,
+          'categoryName': cat.name,
+        });
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.picture_as_pdf, color: Ux4gColors.danger, size: 40),
-          const SizedBox(width: Ux4gSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  doc.name,
-                  style: const TextStyle(
-                    fontWeight: Ux4gTypography.weightSemiBold,
-                    fontSize: Ux4gTypography.sizeBody1,
-                  ),
-                ),
-                const SizedBox(height: Ux4gSpacing.xxs),
-                Text(
-                  'Drawing No: ${doc.documentId}',
-                  style: const TextStyle(
-                    color: Ux4gColors.gray600,
-                    fontSize: Ux4gTypography.sizeSmall,
-                  ),
-                ),
-                const SizedBox(height: Ux4gSpacing.xs),
-                Row(
-                  children: [
-                    Ux4gBadge(
-                      label: doc.version,
-                      variant: doc.version.toLowerCase() == 'archive'
-                          ? Ux4gAlertVariant.warning
-                          : Ux4gAlertVariant.success,
-                    ),
-                    const Spacer(),
-                    Text(
-                      timeAgo,
-                      style: const TextStyle(
-                        color: Ux4gColors.gray500,
-                        fontSize: Ux4gTypography.sizeSmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          Icon(
+            _iconForCategory(cat.name),
+            size: 40,
+            color: Ux4gColors.primary,
+          ),
+          const SizedBox(height: Ux4gSpacing.sm),
+          Text(
+            cat.name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: Ux4gTypography.weightSemiBold,
+              fontSize: Ux4gTypography.sizeBody1,
+            ),
+          ),
+          const SizedBox(height: Ux4gSpacing.xs),
+          Text(
+            '${cat.drawingCount ?? 0} drawings',
+            style: const TextStyle(
+              color: Ux4gColors.gray500,
+              fontSize: Ux4gTypography.sizeSmall,
             ),
           ),
         ],
       ),
-      ),
     );
   }
+}
+
+IconData _iconForCategory(String name) {
+  final lower = name.toLowerCase();
+  if (lower.contains('bridge') || lower.contains('structure')) return Icons.architecture;
+  if (lower.contains('abutment') || lower.contains('pier')) return Icons.foundation;
+  if (lower.contains('track')) return Icons.train;
+  if (lower.contains('signal')) return Icons.traffic;
+  if (lower.contains('electr')) return Icons.electrical_services;
+  if (lower.contains('rolling')) return Icons.directions_railway;
+  if (lower.contains('tower')) return Icons.cell_tower;
+  if (lower.contains('well')) return Icons.water;
+  if (lower.contains('slab') || lower.contains('girder') || lower.contains('beam')) return Icons.view_column;
+  if (lower.contains('level crossing')) return Icons.swap_horiz;
+  if (lower.contains('foot') || lower.contains('subway')) return Icons.directions_walk;
+  if (lower.contains('culvert') || lower.contains('pipe')) return Icons.water_damage;
+  if (lower.contains('retaining') || lower.contains('wall')) return Icons.crop_landscape;
+  if (lower.contains('bed') || lower.contains('protection')) return Icons.shield;
+  return Icons.category;
 }

@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import '../models/document.dart';
 import '../models/category.dart';
+import '../models/subhead.dart';
 import 'api_service.dart';
 
 class DocumentService {
@@ -26,16 +28,20 @@ class DocumentService {
       params['last_synced'] = lastSynced.toIso8601String();
     }
 
+    developer.log('DocumentService: fetching dump', name: 'documents');
     final response = await _api.get('/dump/', queryParams: params.isNotEmpty ? params : null);
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      developer.log('DocumentService: dump received', name: 'documents');
       return {
         'documents': (data['documents'] as List).map((d) => Document.fromJson(d)).toList(),
         'categories': (data['categories'] as List).map((c) => Category.fromJson(c)).toList(),
+        'subheads': (data['subheads'] as List?)?.map((s) => Subhead.fromJson(s)).toList() ?? <Subhead>[],
         'timestamp': data['timestamp'],
       };
     }
-    return {'documents': <Document>[], 'categories': <Category>[], 'timestamp': null};
+    developer.log('DocumentService: dump failed (${response.statusCode})', name: 'documents');
+    return {'documents': <Document>[], 'categories': <Category>[], 'subheads': <Subhead>[], 'timestamp': null};
   }
 
   Future<List<Document>> getDocumentsByCategory(String categoryName) async {
