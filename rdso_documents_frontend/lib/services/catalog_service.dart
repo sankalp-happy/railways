@@ -12,7 +12,8 @@ class CatalogService {
     developer.log('CatalogService: fetching categories', name: 'catalog');
     final response = await _api.get('/categories/');
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      final List data = decoded is List ? decoded : (decoded['results'] as List);
       developer.log('CatalogService: received ${data.length} categories', name: 'catalog');
       return data.map((c) => Category.fromJson(c)).toList();
     }
@@ -24,7 +25,8 @@ class CatalogService {
     developer.log('CatalogService: fetching subheads for category $categoryId', name: 'catalog');
     final response = await _api.get('/categories/$categoryId/subheads/');
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      final List data = decoded is List ? decoded : (decoded['results'] as List);
       developer.log('CatalogService: received ${data.length} subheads', name: 'catalog');
       return data.map((s) => Subhead.fromJson(s)).toList();
     }
@@ -36,7 +38,8 @@ class CatalogService {
     developer.log('CatalogService: fetching documents for subhead $subheadId', name: 'catalog');
     final response = await _api.get('/subheads/$subheadId/documents/');
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      final List data = decoded is List ? decoded : (decoded['results'] as List);
       developer.log('CatalogService: received ${data.length} documents', name: 'catalog');
       return data.map((d) => Document.fromJson(d)).toList();
     }

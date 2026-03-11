@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
@@ -40,9 +39,7 @@ Future<String> savePdfFile(Uint8List bytes, String fileName) async {
     }
   }
 
-  if (baseDir == null) {
-    baseDir = await getApplicationDocumentsDirectory();
-  }
+  baseDir ??= await getApplicationDocumentsDirectory();
 
   final file = File('${baseDir.path}/$fileName');
   await file.writeAsBytes(bytes);

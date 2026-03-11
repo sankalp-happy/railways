@@ -5,6 +5,8 @@ import '../widgets/app_drawer.dart';
 import '../services/catalog_service.dart';
 import '../services/download_queue_service.dart';
 import '../models/category.dart';
+import '../config/routes.dart';
+import '../utils/category_icons.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -54,7 +56,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               tooltip: 'Notifications',
               color: Ux4gColors.primary,
               onPressed: () {
-                Navigator.pushNamed(context, '/notifications');
+                Navigator.pushNamed(context, AppRoutes.notifications);
               },
             ),
           ),
@@ -71,7 +73,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               textInputAction: TextInputAction.search,
               onSubmitted: (value) {
                 if (value.isNotEmpty) {
-                  Navigator.pushNamed(context, '/results', arguments: 'Search: $value');
+                  Navigator.pushNamed(context, AppRoutes.results, arguments: 'Search: $value');
                 }
               },
             ),
@@ -140,7 +142,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
   Widget _buildCategoryCard(BuildContext context, Category cat) {
     return Ux4gCard(
       onTap: () {
-        Navigator.pushNamed(context, '/subheads', arguments: {
+        Navigator.pushNamed(context, AppRoutes.subheads, arguments: {
           'categoryId': cat.id,
           'categoryName': cat.name,
         });
@@ -149,7 +151,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            _iconForCategory(cat.name),
+            iconForCategory(cat.name),
             size: 40,
             color: Ux4gColors.primary,
           ),
@@ -176,23 +178,4 @@ class _HomeDashboardState extends State<HomeDashboard> {
       ),
     );
   }
-}
-
-IconData _iconForCategory(String name) {
-  final lower = name.toLowerCase();
-  if (lower.contains('bridge') || lower.contains('structure')) return Icons.architecture;
-  if (lower.contains('abutment') || lower.contains('pier')) return Icons.foundation;
-  if (lower.contains('track')) return Icons.train;
-  if (lower.contains('signal')) return Icons.traffic;
-  if (lower.contains('electr')) return Icons.electrical_services;
-  if (lower.contains('rolling')) return Icons.directions_railway;
-  if (lower.contains('tower')) return Icons.cell_tower;
-  if (lower.contains('well')) return Icons.water;
-  if (lower.contains('slab') || lower.contains('girder') || lower.contains('beam')) return Icons.view_column;
-  if (lower.contains('level crossing')) return Icons.swap_horiz;
-  if (lower.contains('foot') || lower.contains('subway')) return Icons.directions_walk;
-  if (lower.contains('culvert') || lower.contains('pipe')) return Icons.water_damage;
-  if (lower.contains('retaining') || lower.contains('wall')) return Icons.crop_landscape;
-  if (lower.contains('bed') || lower.contains('protection')) return Icons.shield;
-  return Icons.category;
 }

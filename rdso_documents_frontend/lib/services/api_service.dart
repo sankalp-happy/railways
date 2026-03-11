@@ -3,6 +3,18 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 
+/// Exception thrown when an API call fails with a non-2xx status code.
+class ApiException implements Exception {
+  final int statusCode;
+  final String message;
+  final Map<String, dynamic>? body;
+
+  ApiException(this.statusCode, this.message, [this.body]);
+
+  @override
+  String toString() => 'ApiException($statusCode): $message';
+}
+
 class ApiService {
   static final ApiService _instance = ApiService._();
   factory ApiService() => _instance;

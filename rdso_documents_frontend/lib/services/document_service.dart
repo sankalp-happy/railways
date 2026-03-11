@@ -16,7 +16,8 @@ class DocumentService {
 
     final response = await _api.get('/documents/', queryParams: params.isNotEmpty ? params : null);
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      final List data = decoded is List ? decoded : (decoded['results'] as List);
       return data.map((d) => Document.fromJson(d)).toList();
     }
     return [];

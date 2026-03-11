@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ux4g/ux4g.dart';
 import '../services/catalog_service.dart';
 import '../models/subhead.dart';
+import '../config/routes.dart';
 
 class SubheadListScreen extends StatefulWidget {
   const SubheadListScreen({super.key});
@@ -62,7 +63,7 @@ class _SubheadListScreenState extends State<SubheadListScreen> {
                       final sub = _subheads[index];
                       return Ux4gCard(
                         onTap: () {
-                          Navigator.pushNamed(context, '/drawings', arguments: {
+                          Navigator.pushNamed(context, AppRoutes.drawings, arguments: {
                             'subheadId': sub.id,
                             'subheadName': sub.name,
                           });

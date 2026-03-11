@@ -18,7 +18,7 @@ class _CrawlerScreenState extends State<CrawlerScreen> {
   String? _message;
   bool _isError = false;
   bool _showLogs = false;
-  List<String> _logLines = [];
+  final List<String> _logLines = [];
   int _logOffset = 0;
   Timer? _logPollTimer;
   bool _crawlerRunning = false;

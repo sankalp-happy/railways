@@ -27,7 +27,8 @@ class PostService {
   Future<List<Post>> getPosts(String documentId) async {
     final response = await _api.get('/posts/', queryParams: {'document_id': documentId});
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      final List data = decoded is List ? decoded : (decoded['results'] as List);
       return data.map((p) => Post.fromJson(p)).toList();
     }
     return [];
@@ -36,7 +37,8 @@ class PostService {
   Future<List<Post>> getFeedback(String documentId) async {
     final response = await _api.get('/feedback/$documentId/');
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      final List data = decoded is List ? decoded : (decoded['results'] as List);
       return data.map((p) => Post.fromJson(p)).toList();
     }
     return [];

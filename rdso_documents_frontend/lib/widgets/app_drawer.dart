@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:ux4g/ux4g.dart';
 import '../services/auth_service.dart';
 import '../models/category.dart';
+import '../config/routes.dart';
+import '../utils/category_icons.dart';
 
 Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = const []}) {
   final auth = context.read<AuthService>();
@@ -56,7 +58,7 @@ Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = co
           onPressed: () async {
             await auth.logout();
             if (context.mounted) {
-              Navigator.pushReplacementNamed(context, '/login');
+              Navigator.pushReplacementNamed(context, AppRoutes.login);
             }
           },
           variant: Ux4gButtonVariant.danger,
@@ -70,9 +72,9 @@ Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = co
       children: [
         ...categories.map((cat) => Ux4gSidebarItem(
           title: '${cat.name} (${cat.drawingCount ?? 0})',
-          icon: Icon(_iconForCategory(cat.name)),
+          icon: Icon(iconForCategory(cat.name)),
           onTap: () {
-            Navigator.pushNamed(context, '/subheads', arguments: {
+            Navigator.pushNamed(context, AppRoutes.subheads, arguments: {
               'categoryId': cat.id,
               'categoryName': cat.name,
             });
@@ -82,7 +84,7 @@ Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = co
           title: 'All Documents',
           icon: const Icon(Icons.folder),
           onTap: () {
-            Navigator.pushNamed(context, '/results', arguments: 'All Documents');
+            Navigator.pushNamed(context, AppRoutes.results, arguments: 'All Documents');
           },
         ),
         if (isAdmin) ...[
@@ -102,34 +104,24 @@ Ux4gSidebar buildAppDrawer(BuildContext context, {List<Category> categories = co
           Ux4gSidebarItem(
             title: 'User Management',
             icon: const Icon(Icons.people),
-            onTap: () => Navigator.pushNamed(context, '/admin/users'),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.adminUsers),
           ),
           Ux4gSidebarItem(
             title: 'Create Document',
             icon: const Icon(Icons.note_add),
-            onTap: () => Navigator.pushNamed(context, '/admin/create-document', arguments: categories),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.adminCreateDocument, arguments: categories),
           ),
           Ux4gSidebarItem(
             title: 'RDSO Crawler',
             icon: const Icon(Icons.sync),
-            onTap: () => Navigator.pushNamed(context, '/admin/crawler'),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.adminCrawler),
           ),
           Ux4gSidebarItem(
             title: 'Audit Logs',
             icon: const Icon(Icons.history),
-            onTap: () => Navigator.pushNamed(context, '/admin/logs'),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.adminLogs),
           ),
         ],
       ],
     );
-}
-
-IconData _iconForCategory(String name) {
-  final lower = name.toLowerCase();
-  if (lower.contains('bridge') || lower.contains('structure')) return Icons.architecture;
-  if (lower.contains('track')) return Icons.train;
-  if (lower.contains('signal')) return Icons.traffic;
-  if (lower.contains('electr')) return Icons.electrical_services;
-  if (lower.contains('rolling')) return Icons.directions_railway;
-  return Icons.category;
 }

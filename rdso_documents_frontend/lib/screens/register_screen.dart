@@ -56,6 +56,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    if (phone.isNotEmpty && !RegExp(r'^\d{10}$').hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number must be exactly 10 digits')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final auth = context.read<AuthService>();

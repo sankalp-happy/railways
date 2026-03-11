@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ux4g/ux4g.dart';
 import '../services/auth_service.dart';
+import '../config/routes.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -35,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? 'Login failed')),
@@ -149,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: Ux4gSpacing.md),
                       Center(
                         child: TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/register'),
+                          onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
                           child: const Text('Don\'t have an account? Register'),
                         ),
                       ),

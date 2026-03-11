@@ -11,7 +11,8 @@ class NotificationService {
     // Try document logs first (admin only)
     var response = await _api.get('/logs/documents/');
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      final List data = decoded is List ? decoded : (decoded['results'] as List);
       return data.map((l) => AuditLog.fromJson(l)).toList();
     }
 

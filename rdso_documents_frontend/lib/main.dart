@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ux4g/ux4g.dart';
 import 'services/auth_service.dart';
 import 'services/download_queue_service.dart';
+import 'config/routes.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_dashboard.dart';
@@ -50,18 +51,18 @@ class RdsoDocumentsApp extends StatelessWidget {
       ),
       home: const _AuthGate(),
       routes: {
-        '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/home': (context) => const HomeDashboard(),
-        '/results': (context) => const CategoryResultsScreen(),
-        '/subheads': (context) => const SubheadListScreen(),
-        '/drawings': (context) => const DrawingListScreen(),
-        '/pdf': (context) => const PdfViewScreen(),
-        '/notifications': (context) => const NotificationsScreen(),
-        '/admin/users': (context) => const AdminGuard(child: UserManagementScreen()),
-        '/admin/create-document': (context) => const AdminGuard(child: CreateDocumentScreen()),
-        '/admin/crawler': (context) => const AdminGuard(child: CrawlerScreen()),
-        '/admin/logs': (context) => const AdminGuard(child: AuditLogsScreen()),
+        AppRoutes.login: (context) => const LoginScreen(),
+        AppRoutes.register: (context) => const RegisterScreen(),
+        AppRoutes.home: (context) => const HomeDashboard(),
+        AppRoutes.results: (context) => const CategoryResultsScreen(),
+        AppRoutes.subheads: (context) => const SubheadListScreen(),
+        AppRoutes.drawings: (context) => const DrawingListScreen(),
+        AppRoutes.pdf: (context) => const PdfViewScreen(),
+        AppRoutes.notifications: (context) => const NotificationsScreen(),
+        AppRoutes.adminUsers: (context) => const AdminGuard(child: UserManagementScreen()),
+        AppRoutes.adminCreateDocument: (context) => const AdminGuard(child: CreateDocumentScreen()),
+        AppRoutes.adminCrawler: (context) => const AdminGuard(child: CrawlerScreen()),
+        AppRoutes.adminLogs: (context) => const AdminGuard(child: AuditLogsScreen()),
       },
     );
   }

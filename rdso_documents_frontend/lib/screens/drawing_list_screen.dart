@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:ux4g/ux4g.dart';
 import '../services/catalog_service.dart';
 import '../services/download_queue_service.dart';
 import '../models/document.dart';
-import '../utils/pdf_helper.dart';
-import '../config/api_config.dart';
-import '../services/api_service.dart';
+import '../utils/download_helper.dart';
+import '../config/routes.dart';
 
 class DrawingListScreen extends StatefulWidget {
   const DrawingListScreen({super.key});
@@ -103,42 +101,6 @@ class _DrawingListScreenState extends State<DrawingListScreen>
     _exitSelectMode();
   }
 
-  Future<void> _downloadDoc(Document doc) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Downloading...')),
-    );
-    try {
-      final headers = await ApiService().authHeaders();
-      final url =
-          '${ApiConfig.baseUrl}/documents/?document_ids=${doc.documentId}&download=true';
-      final bytes = await fetchPdfBytes(url, headers);
-      if (!mounted) return;
-      if (bytes != null && bytes.isNotEmpty) {
-        final path = await savePdfFile(bytes, '${doc.documentId}.pdf');
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(kIsWeb ? 'Download started' : '${doc.documentId}.pdf saved'),
-            duration: const Duration(seconds: 5),
-            action: kIsWeb
-                ? null
-                : SnackBarAction(label: 'Open', onPressed: () => openPdfFile(path)),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Download failed')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Download error: $e')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Ux4gScaffold(
@@ -195,7 +157,7 @@ class _DrawingListScreenState extends State<DrawingListScreen>
               onTap: _selectMode
                   ? () => _toggleSelect(doc.documentId)
                   : () {
-                      Navigator.pushNamed(context, '/pdf', arguments: {
+                      Navigator.pushNamed(context, AppRoutes.pdf, arguments: {
                         'name': doc.name,
                         'version': doc.version,
                         'documentId': doc.documentId,
@@ -254,7 +216,7 @@ class _DrawingListScreenState extends State<DrawingListScreen>
                           icon: const Icon(Icons.visibility),
                           tooltip: 'View',
                           onPressed: () {
-                            Navigator.pushNamed(context, '/pdf', arguments: {
+                            Navigator.pushNamed(context, AppRoutes.pdf, arguments: {
                               'name': doc.name,
                               'version': doc.version,
                               'documentId': doc.documentId,
@@ -268,7 +230,7 @@ class _DrawingListScreenState extends State<DrawingListScreen>
                         Ux4gIconButton(
                           icon: const Icon(Icons.download),
                           tooltip: 'Download',
-                          onPressed: () => _downloadDoc(doc),
+                          onPressed: () => downloadDocument(context, doc),
                           variant: Ux4gButtonVariant.success,
                           style: Ux4gButtonStyle.ghost,
                         ),
