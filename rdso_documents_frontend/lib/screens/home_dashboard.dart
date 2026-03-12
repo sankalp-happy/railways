@@ -1,17 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ux4g/ux4g.dart';
 import '../widgets/app_drawer.dart';
+import '../services/catalog_service.dart';
+import '../services/download_queue_service.dart';
+import '../models/category.dart';
+import '../config/routes.dart';
+import '../utils/category_icons.dart';
+import '../utils/category_navigation.dart';
 
-class HomeDashboard extends StatelessWidget {
+class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
+
+  @override
+  State<HomeDashboard> createState() => _HomeDashboardState();
+}
+
+class _HomeDashboardState extends State<HomeDashboard> {
+  final CatalogService _catalogService = CatalogService();
+  List<Category> _categories = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final categories = await _catalogService.getCategories();
+    if (!mounted) return;
+    setState(() {
+      _categories = categories;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Ux4gScaffold(
-      sidebar: buildAppDrawer(context),
+      sidebar: buildAppDrawer(context, categories: _categories),
       appBar: Ux4gAppBar(
         title: const Text(
-          'Home Dashboard',
+          'RDSO Drawing Catalog',
           style: TextStyle(
             fontSize: Ux4gTypography.sizeH4,
             fontWeight: Ux4gTypography.weightBold,
@@ -23,9 +54,10 @@ class HomeDashboard extends StatelessWidget {
             padding: const EdgeInsets.only(right: Ux4gSpacing.sm),
             child: IconButton(
               icon: const Icon(Icons.notifications),
+              tooltip: 'Notifications',
               color: Ux4gColors.primary,
               onPressed: () {
-                Navigator.pushNamed(context, '/notifications');
+                Navigator.pushNamed(context, AppRoutes.notifications);
               },
             ),
           ),
@@ -33,7 +65,6 @@ class HomeDashboard extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Full-width search bar
           Container(
             padding: const EdgeInsets.all(Ux4gSpacing.md),
             color: Ux4gColors.white,
@@ -43,91 +74,102 @@ class HomeDashboard extends StatelessWidget {
               textInputAction: TextInputAction.search,
               onSubmitted: (value) {
                 if (value.isNotEmpty) {
-                  Navigator.pushNamed(context, '/results', arguments: 'Search: $value');
+                  Navigator.pushNamed(context, AppRoutes.results, arguments: 'Search: $value');
                 }
               },
             ),
           ),
           const Divider(height: 1),
-          // Scrollable vertical list
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(Ux4gSpacing.md),
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(bottom: Ux4gSpacing.sm, left: Ux4gSpacing.xs),
-                  child: Text(
-                    'Recently Viewed',
-                    style: TextStyle(
-                      fontSize: Ux4gTypography.sizeH5,
-                      fontWeight: Ux4gTypography.weightSemiBold,
-                    ),
-                  ),
+          Consumer<DownloadQueueService>(
+            builder: (context, queue, _) {
+              if (queue.pendingCount == 0 && queue.activeCount == 0) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Ux4gSpacing.md,
+                  vertical: Ux4gSpacing.sm,
                 ),
-                _buildDocumentCard(
-                    context, 'Standard Span Drawing', 'RDSO/B&S/2023/12', 'v2.1', '2 days ago'),
-                const SizedBox(height: Ux4gSpacing.sm),
-                _buildDocumentCard(
-                    context, 'Track Tolerances Specs', 'RDSO/T/2021/04', 'v1.0', '1 week ago'),
-                const SizedBox(height: Ux4gSpacing.sm),
-                _buildDocumentCard(
-                    context, 'Signaling Relay Manual', 'RDSO/Sig/1999/11', 'Archive', '2 weeks ago'),
-              ],
-            ),
+                color: Ux4gColors.primary.withValues(alpha: 0.1),
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: Ux4gSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Downloading ${queue.activeCount + queue.pendingCount} document(s)...',
+                        style: const TextStyle(
+                          fontSize: Ux4gTypography.sizeSmall,
+                          fontWeight: Ux4gTypography.weightSemiBold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _categories.isEmpty
+                    ? const Center(child: Text('No categories found'))
+                    : RefreshIndicator(
+                        onRefresh: _loadData,
+                        child: GridView.builder(
+                          padding: const EdgeInsets.all(Ux4gSpacing.md),
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 280,
+                            childAspectRatio: 1.3,
+                            crossAxisSpacing: Ux4gSpacing.md,
+                            mainAxisSpacing: Ux4gSpacing.md,
+                          ),
+                          itemCount: _categories.length,
+                          itemBuilder: (context, index) {
+                            return _buildCategoryCard(context, _categories[index]);
+                          },
+                        ),
+                      ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDocumentCard(
-      BuildContext context, String name, String number, String version, String date) {
+  Widget _buildCategoryCard(BuildContext context, Category cat) {
     return Ux4gCard(
       onTap: () {
-        Navigator.pushNamed(context, '/pdf', arguments: {'name': name, 'version': version});
+        openCategory(context, cat);
       },
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.picture_as_pdf, color: Ux4gColors.danger, size: 40),
-          const SizedBox(width: Ux4gSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: Ux4gTypography.weightSemiBold,
-                    fontSize: Ux4gTypography.sizeBody1,
-                  ),
-                ),
-                const SizedBox(height: Ux4gSpacing.xxs),
-                Text(
-                  'Drawing No: $number',
-                  style: const TextStyle(
-                    color: Ux4gColors.gray600,
-                    fontSize: Ux4gTypography.sizeSmall,
-                  ),
-                ),
-                const SizedBox(height: Ux4gSpacing.xs),
-                Row(
-                  children: [
-                    Ux4gBadge(
-                      label: version,
-                      variant: version == 'Archive' ? Ux4gAlertVariant.warning : Ux4gAlertVariant.success,
-                    ),
-                    const Spacer(),
-                    Text(
-                      date,
-                      style: const TextStyle(
-                        color: Ux4gColors.gray500,
-                        fontSize: Ux4gTypography.sizeSmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          Icon(
+            iconForCategory(cat.name),
+            size: 40,
+            color: Ux4gColors.primary,
+          ),
+          const SizedBox(height: Ux4gSpacing.sm),
+          Text(
+            cat.name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: Ux4gTypography.weightSemiBold,
+              fontSize: Ux4gTypography.sizeBody1,
+            ),
+          ),
+          const SizedBox(height: Ux4gSpacing.xs),
+          Text(
+            '${cat.drawingCount ?? 0} drawings',
+            style: const TextStyle(
+              color: Ux4gColors.gray500,
+              fontSize: Ux4gTypography.sizeSmall,
             ),
           ),
         ],
